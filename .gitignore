@@ -1,0 +1,23 @@
+# Environments
+venv/
+venv_scorerisk/
+env/
+
+# Data and Databases
+data/
+*.csv
+*.sqlite3
+
+# Environment Variables (Crucial for security)
+.env
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE and OS Files
+.vscode/
+.idea/
+.DS_Store
