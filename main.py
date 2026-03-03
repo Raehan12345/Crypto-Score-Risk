@@ -10,14 +10,18 @@ def run_project():
     df = get_project_data()
     print(f"Data loaded successfully. Total periods: {len(df)}")
 
-    # indicators
+    # 2. Calculate Synthetic Risk Metrics
     print("Calculating Synthetic Risk Metrics...")
     df['s_ath'] = calculate_ath_score(df['close'])
     df['s_trend'] = calculate_trend_score(df['close'])
     df['s_vol'] = calculate_vol_score(df['close'])
     df['s_ratio'] = calculate_ratio_score(df['eth_btc_ratio'])
+    
+    # calculate the new dynamic volatility and regime metrics
+    df['atr'] = calculate_atr(df['high'], df['low'], df['close'])
+    df['macro_regime'] = calculate_macro_regime(df['close'])
 
-    # weights
+    # assign weights 
     w_ath, w_trend, w_vol, w_ratio = 0.30, 0.30, 0.20, 0.20
     df['risk_score'] = (
         (df['s_ath'] * w_ath) + 
