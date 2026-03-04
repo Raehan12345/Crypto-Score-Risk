@@ -1,46 +1,49 @@
-# Quantitative Trading: The Score Risk System
+# Score Risk System (SRS)
 
 ## Project Overview
-This repository contains an event-driven backtesting framework for a systematic trading strategy dubbed "The Score Risk". Instead of relying on raw price action or single indicators, this model dynamically calculates a synthetic risk probability using a linear combination of four normalized market factors. Capital deployment is inversely correlated to the calculated risk score.
+The **Score Risk System** is a high-frequency, event-driven quantitative trading engine developed in Python. It is designed to navigate the high-volatility environments of Bitcoin (BTC) and Ethereum (ETH) by utilizing a proprietary multi-factor **Risk Score** to dictate position sizing and direction.
 
-## Strategic Architecture
+## Latest Performance Summary
+*As of March 2026*
 
-### 1. The Synthetic Risk Engine
-The core of the system is a proprietary risk score ranging from 0 to 100. It is calculated by weighting four distinct market pillars:
+| Metric | Value |
+| :--- | :--- |
+| **Final Equity** | $42,395.78 |
+| **Total Return** | **323.96%** |
+| **Max Drawdown (MDD)** | **61.40%** |
+| **Sharpe Ratio** | 0.79 |
+| **Total Periods** | 210,280 (15m Candles) |
 
-* **ATH Score:** Measures the normalized distance from the asset's all time high, identifying value zones.
-* **Trend Score:** Evaluates market structure using a boolean weighted stack of fast, medium, and slow Exponential Moving Averages.
-* **Volatility Score:** Analyases rolling 30 period standard deviations normalized against a one year lookback to detect panic or complacency.
-* **Ratio Score:** Tracks the relative strength of the ETH/BTC pair to gauge macro risk appetite in the cryptocurrency ecosystem.
 
-The final risk probability is aggregated via the following formula:
 
-$$Risk_{Total} = (w_1 \cdot S_{ATH}) + (w_2 \cdot S_{Trend}) + (w_3 \cdot S_{Vol}) + (w_4 \cdot S_{Ratio})$$
+## Core Technical Architecture
 
-### 2. Execution Logic
-The execution layer separates signal generation from capital management.
+### 1. Synthetic Risk Scoring
+The engine calculates a real-time risk metric (0-100) based on four primary sub-factors:
+* **Distance from ATH:** Quantifies the "discount" or "overextension" of the asset.
+* **Trend Momentum:** Measures price velocity relative to the 50-day EMA.
+* **Volatility (ATR):** Adjusts entry spacing and sizing based on market chaos.
+* **ETH/BTC Divergence:** Used as a leading indicator for market-wide regime shifts.
 
-* **Tiered Dollar Cost Averaging (DCA):** The system scales into positions aggressively when the risk score is low (below 30) and conservatively when medium (below 50). To prevent aggressive capital depletion during sharp drawdowns, a 0.5% price step requirement is enforced between executions.
-* **Laddered Scale Out:** Profit taking is managed via a Custom FIFO (First In First Out) queue. When the risk score exceeds 70, the system liquidates 20% of the active inventory, ensuring the oldest and cheapest lots are realized first.
+### 2. Execution Engine
+* **Regime Filter:** A 50-day Exponential Moving Average (EMA) acts as the primary switch between "Bull" (Long-biased) and "Bear" (Short-biased/Defensive) modes.
+* **Inventory Management:** Utilizes a **Bi-directional FIFO Queue** to manage layered DCA (Dollar Cost Averaging) entries and exits.
+* **Position Sizing:** Tiered entry logic (e.g., 15% / 8%) to ensure capital is deployed at optimal risk levels.
 
-## Backtest Results
+### 3. Institutional Risk Management
+* **Volatility Normalization:** Pre-calculates 24-hour and 30-day ATR baselines to prevent "buying the cliff" during cascading liquidations.
+* **Dynamic Step Logic:** Spaces entries based on ATR-multipliers (e.g., 1.5x ATR) to ensure mathematical distribution of risk.
+* **Circuit Breakers:** Implements equity-based stops to protect the principal during "black swan" events.
 
-The framework was tested on 15 minute OHLCV data to simulate high frequency systemic execution. After iterative recalibration of position sizing and price step parameters, the model achieved the following performance metrics over a 1000 period test:
 
-* **Total Return:** 2.73%
-* **Max Drawdown:** 4.53%
-* **Sharpe Ratio (Annualized):** 3.76
 
-The high Sharpe ratio and strictly capped Max Drawdown demonstrate the system's strict adherence to capital preservation over reckless alpha generation.
-
-## Repository Structure
-* `src/data_loader.py`: Handles anonymous historical data extraction via the CCXT library.
-* `src/indicators.py`: Contains the mathematical logic for the four risk pillars.
-* `src/engine.py`: The event driven simulator managing the FIFO inventory queue and capital tracking.
-* `main.py`: The central orchestrator for data ingestion, backtesting, and Matplotlib performance visualization.
-
-## Technologies Used
-* Python
-* Pandas & NumPy (Quantitative Analysis)
-* CCXT (Market Data Ingestion)
-* Matplotlib (Performance Visualization)
+## Project Structure
+```text
+score-risk-system/
+├── data/               # local h5/csv cache for btc/eth history
+├── src/
+│   ├── engine.py       # core event-driven simulation logic
+│   ├── indicators.py   # synthetic risk score & ema calculations
+│   └── execution.py    # fifo queue & order management
+├── results/            # backtest charts and csv reports
+└── main.py             # entry point for backtest simulation
